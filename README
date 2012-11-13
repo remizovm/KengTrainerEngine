@@ -1,0 +1,42 @@
+===============================================================================
+===============================================================================
+===============================================================================
+
+Project name: KengTrainerEngine
+Project Desctiption: A trainer engine template used in gamehacking and cheating
+Language: C++
+Date: August 2012
+Author: Mikhail "keng" Remizov
+
+Visit my russian gamehacking video blog at kekekeng.blogspot.com!
+
+
+===============================================================================
+===============================================================================
+===============================================================================
+
+Tools needed:
+=============
+-Microsoft Visual Studio Express 2010\2012
+-Microsoft DirectX SDK
+
+Detailed info:
+==============
+Hook DLL is used for D3D-functions hooking (to draw ingame menu and other graphics if needed) and for memory-editing. Loader is used for DLL injection into the target game's process.
+
+Version History:
+================
+
+v0.2:
+=====
+-Basic hooking support
+-Basic menu drawing
+-Hotkeys support
+-Simple loader GUI
+
+
+Current TODO:
+=============
+-Memory editing functions implementation
+-Comment the whole code
+-D3D font support implementation
