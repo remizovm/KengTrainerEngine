@@ -154,7 +154,7 @@ DWORD GetTargetThreadIDFromProcName(const char * procName)
 //dll injection function
 int Inject(DWORD pID, const char * dllName) 
 { 
-	if(!pID) return 0; //if we've got no pID - quit
+	if(!pID) return 1; //if we've got no pID - quit
 	HANDLE pHandle = OpenProcess(PROCESS_ALL_ACCESS, 0, pID); //obtain the process handle
 	if(!pHandle) //in case of error - show error message and quit
 	{ 
