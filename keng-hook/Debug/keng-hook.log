@@ -1,13 +1,10 @@
-﻿Build started 24.11.2012 0:55:56.
-     1>Project "C:\Users\Mikhail\Documents\GitHub\KengTrainerEngine\keng-hook\keng-hook.vcxproj" on node 2 (Rebuild target(s)).
-     1>ClCompile:
-         C:\Program Files (x86)\Microsoft Visual Studio 11.0\VC\bin\CL.exe /c /ZI /nologo /W3 /WX- /Od /Oy- /D _WINDLL /D _MBCS /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Fo"Debug\\" /Fd"Debug\vc110.pdb" /Gd /TP /analyze- /errorReport:prompt main.cpp
-         main.cpp
-       Link:
-         C:\Program Files (x86)\Microsoft Visual Studio 11.0\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"C:\Users\Mikhail\Documents\GitHub\KengTrainerEngine\Debug\keng-hook.dll" /INCREMENTAL /NOLOGO kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"C:\Users\Mikhail\Documents\GitHub\KengTrainerEngine\Debug\keng-hook.pdb" /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"C:\Users\Mikhail\Documents\GitHub\KengTrainerEngine\Debug\keng-hook.lib" /MACHINE:X86 /DLL Debug\main.obj
-         keng-hook.vcxproj -> C:\Users\Mikhail\Documents\GitHub\KengTrainerEngine\Debug\keng-hook.dll
-     1>Done Building Project "C:\Users\Mikhail\Documents\GitHub\KengTrainerEngine\keng-hook\keng-hook.vcxproj" (Rebuild target(s)).
+﻿Build started 28.05.2013 20:42:26.
+     1>Project "C:\Users\remizovm\Documents\GitHub\KengTrainerEngine\keng-hook\keng-hook.vcxproj" on node 2 (Build target(s)).
+     1>Link:
+         C:\Program Files (x86)\Microsoft Visual Studio 11.0\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"C:\Users\remizovm\Documents\GitHub\KengTrainerEngine\Debug\keng-hook.dll" /INCREMENTAL /NOLOGO kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"C:\Users\remizovm\Documents\GitHub\KengTrainerEngine\Debug\keng-hook.pdb" /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"C:\Users\remizovm\Documents\GitHub\KengTrainerEngine\Debug\keng-hook.lib" /MACHINE:X86 /MERGE:.rdata=.text /FILEALIGN:512 /SECTION:.text,W /IGNORE:4078 /ENTRY:DllMain /DLL Debug\main.obj
+         keng-hook.vcxproj -> C:\Users\remizovm\Documents\GitHub\KengTrainerEngine\Debug\keng-hook.dll
+     1>Done Building Project "C:\Users\remizovm\Documents\GitHub\KengTrainerEngine\keng-hook\keng-hook.vcxproj" (Build target(s)).
 
 Build succeeded.
 
-Time Elapsed 00:00:01.75
+Time Elapsed 00:00:00.55

@@ -15,7 +15,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="keng-loader.cpp">
+    <ClCompile Include="keng-loader.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
