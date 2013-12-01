@@ -49,6 +49,10 @@ x64/
 build/
 [Bb]in/
 [Oo]bj/
+keng-hook/[Dd]ebug/
+keng-hook/[Rr]elease/
+keng-loader/[Dd]ebug/
+keng-loader/[Rr]elease/
 
 # MSTest test Results
 [Tt]est[Rr]esult*/

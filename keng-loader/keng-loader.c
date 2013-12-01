@@ -6,8 +6,8 @@
 #pragma comment(lib, "d3d9.lib")
 #pragma comment(lib, "Shlwapi.lib")
 
-DWORD GetTargetThreadIDFromProcName(const char*);
-int Inject(DWORD, const char *); 
+DWORD GetTargetThreadIDFromProcName(const char *);
+int Inject(const DWORD, const char *); 
 
 LPDIRECT3D9 d3d;
 LPDIRECT3DDEVICE9 d3ddev;
@@ -26,35 +26,33 @@ void RenderFrame()
 	IDirect3DDevice9_Present(d3ddev, 0, 0, 0, 0);
 }
 
-void InitD3D(HWND hWnd) 
+void InitD3D(const HWND hWnd) 
 {	
 	D3DPRESENT_PARAMETERS d3dpp;
-	d3d = Direct3DCreate9(D3D_SDK_VERSION);
-	
+
+	d3d = Direct3DCreate9(D3D_SDK_VERSION);	
 	ZeroMemory(&d3dpp, sizeof(d3dpp));
 	d3dpp.Windowed = 1;
 	d3dpp.SwapEffect = D3DSWAPEFFECT_DISCARD;
 	IDirect3D9_CreateDevice(d3d, 0, D3DDEVTYPE_HAL, hWnd, D3DCREATE_SOFTWARE_VERTEXPROCESSING, &d3dpp, &d3ddev);
-	//d3d->CreateDevice(0, D3DDEVTYPE_HAL, hWnd, D3DCREATE_SOFTWARE_VERTEXPROCESSING, &d3dpp, &d3ddev);
 }
 
 LRESULT CALLBACK WindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) 
 {
-	PAINTSTRUCT ps; 
-    HDC hdc;
-	DWORD pID;
-	char buf[MAX_PATH] = {0};
-	HPEN penWhite;
-	HPEN penBlack;
+	//PAINTSTRUCT ps; 
+    //HDC hdc;
+	//DWORD pID;
+	//char buf[MAX_PATH] = {0};
+	//HPEN penWhite;
+	//HPEN penBlack;
 
-	switch(msg)	
-	{
+	switch(msg) {
 	case WM_DESTROY:
-			PostQuitMessage(0);
-			break;
+		PostQuitMessage(0);
+		break;
 	case WM_LBUTTONDOWN:
-			/*SendMessage(hWnd, 0xA1, 0x2, 0);
-			pID = GetTargetThreadIDFromProcName("Diablo III.exe");
+		SendMessage(hWnd, 0xA1, 0x2, 0);
+			/*pID = GetTargetThreadIDFromProcName("abc.exe");
 			if(pID == 0)
 			{
 				MessageBox(0, "ERROR: Unable to find pID!", "Ocelot Loader @ keng", MB_OK);
@@ -67,10 +65,10 @@ LRESULT CALLBACK WindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 				Inject(pID, buf);
 				return 0;
 			}*/
-			break;
+		break;
 	case WM_RBUTTONUP:
-			PostQuitMessage(0);
-			break;
+		PostQuitMessage(0);
+		break;
 	}
 	return DefWindowProc(hWnd, msg, wParam, lParam);
 }
@@ -93,63 +91,50 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	wc.cbClsExtra = 0;
     wc.cbWndExtra = 0;
 	RegisterClassEx(&wc);
-	hWnd = CreateWindowEx(0, "WindowClass", "Test D3D9", 0x90008000, 0, 0, 240, 160, 0, 0, hInstance, 0);
+	hWnd = CreateWindowEx(0, "WindowClass", "Ocelot Loader", 0x90008000, 0, 0, 240, 160, 0, 0, hInstance, 0);
 	ShowWindow(hWnd, SW_SHOW); 
     UpdateWindow(hWnd); 
 	InitD3D(hWnd);	
-	while(GetMessage(&msg, 0, 0, 0))
-        {
-            TranslateMessage(&msg);
-            DispatchMessage(&msg);
-			RenderFrame();
-		}
+	while(GetMessage(&msg, 0, 0, 0)) {
+		TranslateMessage(&msg);
+		DispatchMessage(&msg);
+		RenderFrame();
+	}
 	CleanD3D();
 	return msg.wParam;
 }
 
-//Game process ID searching function
-DWORD GetTargetThreadIDFromProcName(const char * procName) 
+// Game process ID searching function
+DWORD GetTargetThreadIDFromProcName(const char *procName) 
 {
-	PROCESSENTRY32 pe; //process snapshot
+	PROCESSENTRY32 pe; // process snapshot
 	int retval;
-	HANDLE thSnapShot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0); //getting the whole system processes snapshot
-	//if(thSnapShot == INVALID_HANDLE_VALUE) //if something is wrong
-	//{ //show error message
-	//	MessageBox(0, "ERROR: Unable to create toolhelp snapshot!", "Ocelot Loader @ keng", MB_OK); 
-	//	return 1; //and quit
-	//}
+
+	HANDLE thSnapShot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0); // getting the whole system processes snapshot
 	pe.dwSize = sizeof(PROCESSENTRY32);
-	retval = Process32First(thSnapShot, &pe); //get the 1-st process
-	while(retval) //while there are any processes left
-	{ 
-		if(StrStrI(pe.szExeFile, procName)) return pe.th32ProcessID; //if process name == our needed name, then return the pid and quit
-		retval = Process32Next(thSnapShot, &pe); //if not - get the next process
+	retval = Process32First(thSnapShot, &pe); // get the 1-st process
+	while (retval) { // while there are any processes left
+		if (StrStrI(pe.szExeFile, procName)) // if process name == our needed name, then return the pid and quit
+			return pe.th32ProcessID; 
+		retval = Process32Next(thSnapShot, &pe); // if not - get the next process
 	} 
 	return 0; //if nothing was found - return 0 and quit
 }
 
-int Inject(DWORD pID, const char* dllName) 
+int Inject(const DWORD pID, const char* dllName) 
 { 
 	HANDLE pHandle;
 	DWORD loadLibAddr;
 	LPVOID rString;
 	HANDLE hThread;
-	if(!pID) return 1;
+
+	if(!pID) 
+		return 1;
 	pHandle = OpenProcess(PROCESS_ALL_ACCESS, 0, pID);
-	//if(!pHandle)
-	//{ 
-	//	MessageBox(0, "ERROR: Unable to open target process!", "Loader", MB_OK); 
-	//	return 1;
-	//}
-	loadLibAddr = (DWORD)GetProcAddress(GetModuleHandle("kernel32.dll"), "LoadLibraryA"); //get the LoadLibraryA() address from kernel32.dll
+	loadLibAddr = (DWORD)GetProcAddress(GetModuleHandle("kernel32.dll"), "LoadLibraryA"); // get the LoadLibraryA() address from kernel32.dll
 	rString = (LPVOID)VirtualAllocEx(pHandle, 0, strlen(dllName), MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE); 
 	WriteProcessMemory(pHandle, (LPVOID)rString, dllName, strlen(dllName), 0);
 	hThread = CreateRemoteThread(pHandle, 0, 0, (LPTHREAD_START_ROUTINE)loadLibAddr, (LPVOID)rString, 0, 0);
-	//if(hThread == 0)
-	//{
-	//	MessageBox(0, "ERROR: Unable to create remote thread!", "Loader", MB_OK);
-	//	return 1;
-	//}
-	CloseHandle(pHandle); //close the opened handle 
-	return 0; //everything is done, so quit
+	CloseHandle(pHandle); // close the opened handle 
+	return 0; // everything is done, so quit
 } 
