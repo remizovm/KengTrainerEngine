@@ -1,9 +1,13 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Express 2012 for Windows Desktop
+# Visual Studio Express 2013 for Windows Desktop
+VisualStudioVersion = 12.0.21005.1
+MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "keng-hook", "keng-hook\keng-hook.vcxproj", "{8926E6B2-D932-4D4A-AE9D-03AECC19CD1B}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "keng-loader", "keng-loader\keng-loader.vcxproj", "{7108E672-3061-4F45-80F2-36956ABE8C92}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "keng-stridelogger", "keng-logger\keng-logger.vcxproj", "{EA982869-C7B6-4F9C-BFFF-17B6FAB4D6DA}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -19,6 +23,10 @@ Global
 		{7108E672-3061-4F45-80F2-36956ABE8C92}.Debug|Win32.Build.0 = Debug|Win32
 		{7108E672-3061-4F45-80F2-36956ABE8C92}.Release|Win32.ActiveCfg = Release|Win32
 		{7108E672-3061-4F45-80F2-36956ABE8C92}.Release|Win32.Build.0 = Release|Win32
+		{EA982869-C7B6-4F9C-BFFF-17B6FAB4D6DA}.Debug|Win32.ActiveCfg = Debug|Win32
+		{EA982869-C7B6-4F9C-BFFF-17B6FAB4D6DA}.Debug|Win32.Build.0 = Debug|Win32
+		{EA982869-C7B6-4F9C-BFFF-17B6FAB4D6DA}.Release|Win32.ActiveCfg = Release|Win32
+		{EA982869-C7B6-4F9C-BFFF-17B6FAB4D6DA}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

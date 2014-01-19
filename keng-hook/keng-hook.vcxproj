@@ -54,10 +54,14 @@
       <Optimization>Disabled</Optimization>
       <CompileAs>CompileAsC</CompileAs>
       <EnablePREfast>true</EnablePREfast>
+      <DebugInformationFormat>None</DebugInformationFormat>
+      <BufferSecurityCheck>false</BufferSecurityCheck>
+      <BasicRuntimeChecks>Default</BasicRuntimeChecks>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalOptions>/MERGE:.rdata=.text /FILEALIGN:512 /SECTION:.text,WER /IGNORE:4078 /ENTRY:DllMain %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalDependencies>detours.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -69,6 +73,8 @@
       <AssemblerOutput>NoListing</AssemblerOutput>
       <WholeProgramOptimization>false</WholeProgramOptimization>
       <CompileAs>CompileAsC</CompileAs>
+      <DebugInformationFormat>None</DebugInformationFormat>
+      <BufferSecurityCheck>false</BufferSecurityCheck>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>false</GenerateDebugInformation>
@@ -77,10 +83,16 @@
       <EntryPointSymbol>DllMain</EntryPointSymbol>
       <SubSystem>Windows</SubSystem>
       <AdditionalOptions>/MERGE:.rdata=.text /FILEALIGN:512 /SECTION:.text,WER /IGNORE:4078 /ENTRY:DllMain %(AdditionalOptions)</AdditionalOptions>
+      <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="main.c" />
+    <ClCompile Include="detour.c" />
+    <ClCompile Include="hook.c" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="detour.h" />
+    <ClInclude Include="detours.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
