@@ -57,6 +57,8 @@
       <DebugInformationFormat>None</DebugInformationFormat>
       <BufferSecurityCheck>false</BufferSecurityCheck>
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
+      <MinimalRebuild>false</MinimalRebuild>
+      <ExceptionHandling>false</ExceptionHandling>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -75,6 +77,7 @@
       <CompileAs>CompileAsC</CompileAs>
       <DebugInformationFormat>None</DebugInformationFormat>
       <BufferSecurityCheck>false</BufferSecurityCheck>
+      <ExceptionHandling>false</ExceptionHandling>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>false</GenerateDebugInformation>
@@ -82,7 +85,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <EntryPointSymbol>DllMain</EntryPointSymbol>
       <SubSystem>Windows</SubSystem>
-      <AdditionalOptions>/MERGE:.rdata=.text /FILEALIGN:512 /SECTION:.text,WER /IGNORE:4078 /ENTRY:DllMain %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/MERGE:.rdata=.text /FILEALIGN:512 /SECTION:.text,WER /IGNORE:4078 %(AdditionalOptions)</AdditionalOptions>
       <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
     </Link>
   </ItemDefinitionGroup>

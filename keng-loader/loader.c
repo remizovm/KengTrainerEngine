@@ -10,7 +10,7 @@
 #include <tlhelp32.h>
 #include <shlwapi.h>
 #pragma comment(lib, "d3d9.lib")
-#pragma comment(lib, "Shlwapi.lib")
+//#pragma comment(lib, "Shlwapi.lib")
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -132,6 +132,27 @@ int WINAPI WinMain(HINSTANCE hInstance,
 
 ///////////////////////////////////////////////////////////////////////////////
 
+char* strstr(const char *in, const char *str)
+{
+	char c;
+	size_t len;
+	c = *str++;
+	if (!c)
+		return (char *)in;
+	len = strlen(str);
+	do {
+		char sc;
+		do {
+			sc = *in++;
+			if (!sc)
+				return (char *)0;
+		} while (sc != c);
+	} while (strncmp(in, str, len) != 0);
+	return (char *)(in - 1);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
 // Game process ID searching function
 DWORD GetTargetThreadIDFromProcName(const char *procName) 
 {
@@ -140,11 +161,12 @@ DWORD GetTargetThreadIDFromProcName(const char *procName)
 	// getting the whole system processes snapshot
 	HANDLE thSnapShot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0); 
 	pe.dwSize = sizeof(PROCESSENTRY32);
+	
 	retval = Process32First(thSnapShot, &pe); // get the 1-st process
 	while (retval) { // while there are any processes left
-		// if process name == our needed name, then return the pid and quit
-		if (StrStrI(pe.szExeFile, procName)) 
-			return pe.th32ProcessID; 
+		// if process name == our needed name, then return the pid and quit		
+		if (strstr(pe.szExeFile, procName))
+			return pe.th32ProcessID;
 		// if not - get the next process
 		retval = Process32Next(thSnapShot, &pe); 
 	} 

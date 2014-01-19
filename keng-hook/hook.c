@@ -9,7 +9,7 @@
 #include <d3dx9core.h>
 #include "detours.h"
 #pragma comment(lib, "d3d9")
-#pragma comment(lib, "d3dx9")
+//#pragma comment(lib, "d3dx9")
 
 ///////////////////////////////////////////////////////////////////////////////
 
