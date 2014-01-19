@@ -1,40 +1,59 @@
+///////////////////////////////////////////////////////////////////////////////
+//
+// Microsoft Direct 3D hooking engine by Mikhail Remizov aka keng
+// 2012-2013
+//
+///////////////////////////////////////////////////////////////////////////////
+
 #include <d3d9.h>
 #include <d3dx9core.h>
-
 #include "detours.h"
-
 #pragma comment(lib, "d3d9")
 #pragma comment(lib, "d3dx9")
 
-typedef HRESULT(WINAPI* pDrawIndexedPrimitive)(LPDIRECT3DDEVICE9, D3DPRIMITIVETYPE, int, UINT, UINT, UINT, UINT);
+///////////////////////////////////////////////////////////////////////////////
+
+typedef HRESULT(WINAPI* pDrawIndexedPrimitive)(LPDIRECT3DDEVICE9, 
+				D3DPRIMITIVETYPE, int, UINT, UINT, UINT, UINT);
 typedef HRESULT(WINAPI* pEndScene)(LPDIRECT3DDEVICE9);
 typedef HRESULT(WINAPI* pReset)(LPDIRECT3DDEVICE9, D3DPRESENT_PARAMETERS*);
-
 pDrawIndexedPrimitive oDrawIndexedPrimitive;
 pEndScene oEndScene;
 pReset oReset;
-
 int wallHack;
 
-HRESULT WINAPI hkDrawIndexedPrimitive(LPDIRECT3DDEVICE9 pDevice, D3DPRIMITIVETYPE PrimType, INT BaseVertexIndex, UINT MinVertexIndex, UINT NumVertices, UINT startIndex, UINT primCount)
-{
+///////////////////////////////////////////////////////////////////////////////
+
+HRESULT WINAPI hkDrawIndexedPrimitive( LPDIRECT3DDEVICE9 pDevice, 
+									   D3DPRIMITIVETYPE PrimType, 
+									   INT BaseVertexIndex, 
+									   UINT MinVertexIndex, 
+									   UINT NumVertices, 
+									   UINT startIndex, 
+									   UINT primCount) {
 	LPDIRECT3DVERTEXBUFFER9 Stream_Data;
 	UINT Offset = 0;
 	UINT Stride = 0;
 
-	if (IDirect3DDevice9_GetStreamSource(pDevice, 0, &Stream_Data, &Offset, &Stride) == S_OK)
+	if (IDirect3DDevice9_GetStreamSource(pDevice, 0, &Stream_Data, 
+										 &Offset, &Stride) == S_OK)
 		IDirect3DVertexBuffer9_Release(Stream_Data);
 	if (Stride == 32 && BaseVertexIndex == 33) {
 		IDirect3DDevice9_SetRenderState(pDevice, D3DRS_ZENABLE, D3DZB_FALSE);
 	}
-	return oDrawIndexedPrimitive(pDevice, PrimType, BaseVertexIndex, MinVertexIndex, NumVertices, startIndex, primCount);
+	return oDrawIndexedPrimitive(pDevice, PrimType, BaseVertexIndex, 
+								 MinVertexIndex, NumVertices, startIndex, 
+								 primCount);
 }
 
+///////////////////////////////////////////////////////////////////////////////
+
 HRESULT WINAPI hkEndScene(LPDIRECT3DDEVICE9 pDev)
-{
-	
+{	
 	return oEndScene(pDev);
 }
+
+///////////////////////////////////////////////////////////////////////////////
 
 void GetDevice9Methods()
 {	
@@ -46,14 +65,16 @@ void GetDevice9Methods()
 	IDirect3DDevice9* d3dDevice;
 	DWORD* vtablePtr;
 	D3DPRESENT_PARAMETERS d3dpp;
-	HWND hWnd = CreateWindowExA(0, "STATIC", "dummy", 0, 0, 0, 0, 0, 0, 0, 0, 0);
+	HWND hWnd = CreateWindowExA(0, "STATIC", "dummy", 0, 0, 0, 
+												0, 0, 0, 0, 0, 0);
 	HMODULE hD3D9 = GetModuleHandleA("d3d9.dll");
 	if (hD3D9 != 0) {
 		d3d9_ptr = Direct3DCreate9(D3D_SDK_VERSION);
 		ZeroMemory(&d3dpp, sizeof(d3dpp));
 		d3dpp.Windowed = 1;
 		d3dpp.SwapEffect = D3DSWAPEFFECT_DISCARD;
-		IDirect3D9_CreateDevice(d3d9_ptr, 0, D3DDEVTYPE_HAL, hWnd, D3DCREATE_SOFTWARE_VERTEXPROCESSING, &d3dpp, &d3dDevice);
+		IDirect3D9_CreateDevice(d3d9_ptr, 0, D3DDEVTYPE_HAL, hWnd, 
+					D3DCREATE_SOFTWARE_VERTEXPROCESSING, &d3dpp, &d3dDevice);
 		vtablePtr = (PDWORD)(*((PDWORD)d3dDevice));
 		present9 = vtablePtr[17] - (DWORD)hD3D9;
 		dip9 = vtablePtr[82] - (DWORD)hD3D9;
@@ -63,11 +84,17 @@ void GetDevice9Methods()
 		IDirect3D9_Release(d3d9_ptr);
 	}
 	CloseHandle(hWnd);		
-	oDrawIndexedPrimitive = (pDrawIndexedPrimitive)DetourFunction((PBYTE)((DWORD)hD3D9 + dip9), (PBYTE)hkDrawIndexedPrimitive);
-	oEndScene = (pEndScene)DetourFunction((PBYTE)((DWORD)hD3D9 + endScene9), (PBYTE)hkEndScene);
+	oDrawIndexedPrimitive = 
+		(pDrawIndexedPrimitive)DetourFunction((PBYTE)((DWORD)hD3D9 + dip9), 
+		(PBYTE)hkDrawIndexedPrimitive);
+	oEndScene = 
+		(pEndScene)DetourFunction((PBYTE)((DWORD)hD3D9 + endScene9), 
+		(PBYTE)hkEndScene);
 }
 
-void HookDevice9Methods()
+///////////////////////////////////////////////////////////////////////////////
+
+void HookDevice9Methods() // DEPRECATED AND NOT USED BY NOW
 {	
 	/*
 	g_D3D9_Present = (PRESENT9)((DWORD)hD3D9 + present9); //calculate the actual Present() address
@@ -88,6 +115,8 @@ void HookDevice9Methods()
 	*/
 }
 
+///////////////////////////////////////////////////////////////////////////////
+
 void TF() {	
 	GetDevice9Methods();
 	while (1) {		
@@ -98,9 +127,13 @@ void TF() {
 	}
 }
 
+///////////////////////////////////////////////////////////////////////////////
+
 int WINAPI DllMain(HINSTANCE hInst, DWORD ul_reason_for_call, void* lpReserved)
 {
 	if (ul_reason_for_call == DLL_PROCESS_ATTACH)
 		CreateThread(0, 0, (LPTHREAD_START_ROUTINE)TF, 0, 0, 0);
 	return 1;
 }
+
+///////////////////////////////////////////////////////////////////////////////
