@@ -1,7 +1,6 @@
 #include <vector>
 #include <d3d9.h>
 #include <d3dx9core.h>
-
 #include "detours.h"
 
 #pragma comment(lib, "d3d9")
@@ -23,13 +22,6 @@ typedef struct _STRIDELOG{
 	UINT Prim;
 }STRIDELOG, *PSTRIDELOG;
 
-int indicator = 0;
-D3DRECT rec = {10, 10, 160, 240}; //menu size
-RECT fontRect = { 10, 15, 120, 120 };
-ID3DXFont *m_font = 0;
-D3DCOLOR bkgColor;
-D3DCOLOR fontColor;
-
 D3DVIEWPORT9 Vpt;
 LPDIRECT3DTEXTURE9 Green = NULL; 
 LPDIRECT3DTEXTURE9 pTx = NULL;
@@ -44,24 +36,6 @@ bool Startlog = false;
 LPDIRECT3DBASETEXTURE9 BTEX = NULL;
 bool Found = false;
 STRIDELOG StrideLog;
-
-void DrawIndicator(void* self)
-{
-	IDirect3DDevice9* dev = (IDirect3DDevice9*)self; //get the actual D3D-device
-	//create D3D-font (if not created yet)
-	if (m_font == 0) 
-		D3DXCreateFont(dev, 12, 0, FW_BOLD, 0, 0, 1, 0, 0, 0 | FF_DONTCARE, TEXT("Terminal"), &m_font);	
-	IDirect3DDevice9_BeginScene(dev);
-	//(dev)->lpVtbl->BeginScene(dev);
-	//if(indicator) { //if we need to draw the menu	
-		bkgColor = D3DCOLOR_XRGB(0, 0, 255);
-		fontColor = D3DCOLOR_XRGB(0, 255, 255);
-		//(m_font)->lpVtbl->DrawTextA(m_font, 0, "keng.gamehacklab.ru", -1, &fontRect, 0, fontColor);
-		IDirect3DDevice9_Clear(dev, 1, &rec, D3DCLEAR_TARGET, bkgColor, 1.0f, 0);
-		//m_font->DrawText(0, menu, -1, &fontRect, 0, fontColor); //draw text
-	//}
-	IDirect3DDevice9_EndScene(dev);
-}
 
 HRESULT WINAPI hkDrawIndexedPrimitive(LPDIRECT3DDEVICE9 pDevice, D3DPRIMITIVETYPE PrimType, INT BaseVertexIndex, UINT MinVertexIndex, UINT NumVertices, UINT startIndex, UINT primCount)
 {
@@ -110,11 +84,6 @@ HRESULT WINAPI hkDrawIndexedPrimitive(LPDIRECT3DDEVICE9 pDevice, D3DPRIMITIVETYP
 			}
 		}
 	}
-
-	
-	if (Stride == 32 && BaseVertexIndex == 33) {
-		pDevice->SetRenderState(D3DRS_ZENABLE, D3DZB_FALSE);
-	}
 	return oDrawIndexedPrimitive(pDevice, PrimType, BaseVertexIndex, MinVertexIndex, NumVertices, startIndex, primCount);
 }
 
@@ -160,7 +129,6 @@ HRESULT WINAPI hkReset(LPDIRECT3DDEVICE9 pDev,D3DPRESENT_PARAMETERS* PresP)
 
 void GetDevice9Methods()
 {
-	DWORD present9 = 0;
 	DWORD dip9 = 0;
 	DWORD endScene9 = 0;
 	DWORD reset9 = 0;
@@ -177,7 +145,6 @@ void GetDevice9Methods()
 		d3dpp.SwapEffect = D3DSWAPEFFECT_DISCARD;
 		d3d9_ptr->CreateDevice(0, D3DDEVTYPE_HAL, hWnd, D3DCREATE_SOFTWARE_VERTEXPROCESSING, &d3dpp, &d3dDevice);
 		vtablePtr = (PDWORD)(*((PDWORD)d3dDevice));
-		present9 = vtablePtr[17] - (DWORD)hD3D9;
 		dip9 = vtablePtr[82] - (DWORD)hD3D9;
 		endScene9 = vtablePtr[42] - (DWORD)hD3D9;
 		reset9 = vtablePtr[16] - (DWORD)hD3D9;
@@ -185,31 +152,9 @@ void GetDevice9Methods()
 		d3d9_ptr->Release();
 	}
 	CloseHandle(hWnd);
-		
 	oDrawIndexedPrimitive = (pDrawIndexedPrimitive)DetourFunction((PBYTE)((DWORD)hD3D9 + dip9), (PBYTE)hkDrawIndexedPrimitive);
 	oEndScene = (pEndScene)DetourFunction((PBYTE)((DWORD)hD3D9 + endScene9), (PBYTE)hkEndScene);
 	oReset = (pReset)DetourFunction((PBYTE)((DWORD)hD3D9 + reset9), (PBYTE)hkReset);
-}
-
-void HookDevice9Methods()
-{	
-	/*
-	g_D3D9_Present = (PRESENT9)((DWORD)hD3D9 + present9); //calculate the actual Present() address
-	g_jmp_p9[0] = 0xE9; //fill the codecave array ("jmp hooked_present")	
-	addr1 = (DWORD)HookedPresent9 - (DWORD)g_D3D9_Present - 5; //calculate the hooked Present() address
-	memcpy(g_jmp_p9 + 1, &addr1, sizeof(DWORD)); //write it into the cave
-	memcpy(g_codeFragment_p9, g_D3D9_Present, 5); //save the first 5 (jmp + addr) bytes of the original Present() 
-	VirtualProtect(g_D3D9_Present, 8, PAGE_EXECUTE_READWRITE, &g_savedProtection_p9); //make the code writable\executable
-	memcpy(g_D3D9_Present, g_jmp_p9, 5); //write the codecave in the beginning of the original Present()
-		
-	g_D3D9_DIP = (DIP9)((DWORD)hD3D9 + dip9); //calculate the actual Present() address
-	g_jmp_dip9[0] = 0xE9; //fill the codecave array ("jmp hooked_present")	
-	addr2 = (DWORD)HookedDIP9 - (DWORD)g_D3D9_DIP - 5; //calculate the hooked Present() address
-	memcpy(g_jmp_dip9 + 1, &addr2, sizeof(DWORD)); //write it into the cave
-	memcpy(g_codeFragment_dip9, g_D3D9_DIP, 5); //save the first 5 (jmp + addr) bytes of the original Present() 
-	VirtualProtect(g_D3D9_DIP, 14, PAGE_EXECUTE_READWRITE, &g_savedProtection_dip9); //make the code writable\executable
-	memcpy(g_D3D9_DIP, g_jmp_dip9, 5); //write the codecave in the beginning of the original Present()	
-	*/
 }
 
 void TF() {
