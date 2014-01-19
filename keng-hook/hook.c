@@ -123,7 +123,6 @@ void TF() {
 		if (GetAsyncKeyState(VK_F1) & 1) 
 			wallHack = !wallHack;
 		Sleep(100);
-		LONG lala;
 	}
 }
 
