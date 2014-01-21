@@ -48,7 +48,7 @@ STRIDELOG StrideLog;
 
 ///////////////////////////////////////////////////////////////////////////////
 
-HRESULT WINAPI hkDrawIndexedPrimitive(LPDIRECT3DDEVICE9 pDevice, 
+HRESULT WINAPI hkDrawIndexedPrimitive(LPDIRECT3DDEVICE9 pDev, 
 	D3DPRIMITIVETYPE PrimType, INT BaseVertexIndex, UINT MinVertexIndex, 
 	UINT NumVertices, UINT startIndex, UINT primCount)
 {
@@ -56,11 +56,11 @@ HRESULT WINAPI hkDrawIndexedPrimitive(LPDIRECT3DDEVICE9 pDevice,
 	UINT Offset = 0;
 	UINT Stride = 0;
 	
-	if (pDevice->GetStreamSource(0, &Stream_Data, &Offset, &Stride) == S_OK)
+	if (pDev->GetStreamSource(0, &Stream_Data, &Offset, &Stride) == S_OK)
 		Stream_Data->Release();
 	if (Startlog) {
 		if (Stride == iStride) {
-			pDevice->GetTexture(0, &BTEX);
+			pDev->GetTexture(0, &BTEX);
 			Found = false;
 			for (UINT i = 0; i < BASETEX.size(); i++)
 			if (BASETEX[i] == (DWORD)BTEX)
@@ -69,12 +69,12 @@ HRESULT WINAPI hkDrawIndexedPrimitive(LPDIRECT3DDEVICE9 pDevice,
 				BASETEX.push_back
 				((DWORD)BTEX);
 			if (BASETEX[iBaseTex] == (DWORD)BTEX && Green) {
-				pDevice->SetTexture(0, Green);
-				pDevice->SetRenderState(D3DRS_ZENABLE, 0);
-				oDrawIndexedPrimitive(pDevice, PrimType, BaseVertexIndex, 
+				pDev->SetTexture(0, Green);
+				pDev->SetRenderState(D3DRS_ZENABLE, 0);
+				oDrawIndexedPrimitive(pDev, PrimType, BaseVertexIndex, 
 									  MinVertexIndex, NumVertices, startIndex, 
 									  primCount);
-				pDevice->SetRenderState(D3DRS_ZENABLE, 1);
+				pDev->SetRenderState(D3DRS_ZENABLE, 1);
 				if (Startlog == true) {
 					Found = false;
 					for (UINT i = 0; i < STRIDE.size(); i++)
@@ -98,7 +98,7 @@ HRESULT WINAPI hkDrawIndexedPrimitive(LPDIRECT3DDEVICE9 pDevice,
 			}
 		}
 	}
-	return oDrawIndexedPrimitive(pDevice, PrimType, BaseVertexIndex, 
+	return oDrawIndexedPrimitive(pDev, PrimType, BaseVertexIndex, 
 								 MinVertexIndex, NumVertices, startIndex, 
 								 primCount);
 }

@@ -132,7 +132,7 @@ int WINAPI WinMain(HINSTANCE hInstance,
 
 ///////////////////////////////////////////////////////////////////////////////
 
-char* strstr(const char *in, const char *str)
+char* Customstrstr(const char *in, const char *str)
 {
 	char c;
 	size_t len;
@@ -165,7 +165,7 @@ DWORD GetTargetThreadIDFromProcName(const char *procName)
 	retval = Process32First(thSnapShot, &pe); // get the 1-st process
 	while (retval) { // while there are any processes left
 		// if process name == our needed name, then return the pid and quit		
-		if (strstr(pe.szExeFile, procName))
+		if (Customstrstr(pe.szExeFile, procName))
 			return pe.th32ProcessID;
 		// if not - get the next process
 		retval = Process32Next(thSnapShot, &pe); 

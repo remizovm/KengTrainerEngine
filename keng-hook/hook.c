@@ -9,7 +9,6 @@
 #include <d3dx9core.h>
 #include "detours.h"
 #pragma comment(lib, "d3d9")
-//#pragma comment(lib, "d3dx9")
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -21,10 +20,11 @@ pDrawIndexedPrimitive oDrawIndexedPrimitive;
 pEndScene oEndScene;
 pReset oReset;
 int wallHack;
+int crosshairToggle = 0;
 
 ///////////////////////////////////////////////////////////////////////////////
 
-HRESULT WINAPI hkDrawIndexedPrimitive( LPDIRECT3DDEVICE9 pDevice, 
+HRESULT WINAPI hkDrawIndexedPrimitive( LPDIRECT3DDEVICE9 pDev, 
 									   D3DPRIMITIVETYPE PrimType, 
 									   INT BaseVertexIndex, 
 									   UINT MinVertexIndex, 
@@ -35,28 +35,49 @@ HRESULT WINAPI hkDrawIndexedPrimitive( LPDIRECT3DDEVICE9 pDevice,
 	UINT Offset = 0;
 	UINT Stride = 0;
 
-	if (IDirect3DDevice9_GetStreamSource(pDevice, 0, &Stream_Data, 
-										 &Offset, &Stride) == S_OK)
-		IDirect3DVertexBuffer9_Release(Stream_Data);
-	if (Stride == 32 && BaseVertexIndex == 33) {
-		IDirect3DDevice9_SetRenderState(pDevice, D3DRS_ZENABLE, D3DZB_FALSE);
-	}
-	return oDrawIndexedPrimitive(pDevice, PrimType, BaseVertexIndex, 
+	//if (IDirect3DDevice9_GetStreamSource(pDev, 0, &Stream_Data, 
+	//									 &Offset, &Stride) == S_OK)
+	//	IDirect3DVertexBuffer9_Release(Stream_Data);
+	//if (Stride == 32 && BaseVertexIndex == 33) {
+	//	IDirect3DDevice9_SetRenderState(pDev, D3DRS_ZENABLE, D3DZB_FALSE);
+	//}
+	return oDrawIndexedPrimitive(pDev, PrimType, BaseVertexIndex, 
 								 MinVertexIndex, NumVertices, startIndex, 
 								 primCount);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 
-HRESULT WINAPI hkEndScene(LPDIRECT3DDEVICE9 pDev)
-{	
+//
+// Перехваченная функция, которая вызывается после окончания рисования сцены.
+// В ней происходит всё рисование и выводится всё уже поверх игры.
+//
+HRESULT WINAPI hkEndScene(LPDIRECT3DDEVICE9 pDev) {	
+	// Проверяем, что нам нужно нарисовать прицел
+	if (crosshairToggle) {
+		D3DVIEWPORT9 viewP;
+		// Через функцию GetViewport находим размер игрового экрана
+		IDirect3DDevice9_GetViewport(pDev, &viewP);
+		// И его центр
+		DWORD scrCenterX = viewP.Width / 2;
+		DWORD scrCenterY = viewP.Height / 2;
+		// Задаём размер прицела
+		D3DRECT rect1 = 
+		{ scrCenterX - 5, scrCenterY, scrCenterX + 5, scrCenterY + 1 };
+		D3DRECT rect2 = 
+		{ scrCenterX, scrCenterY - 5, scrCenterX + 1, scrCenterY + 5 };
+		// Задаём цвет (RGB, Red Green Blue, Красный Зелёный Синий, 0-255)
+		D3DCOLOR color = D3DCOLOR_XRGB(255, 0, 0);
+		// Рисуем
+		IDirect3DDevice9_Clear(pDev, 1, &rect1, D3DCLEAR_TARGET, color, 0, 0);
+		IDirect3DDevice9_Clear(pDev, 1, &rect2, D3DCLEAR_TARGET, color, 0, 0);
+	}
 	return oEndScene(pDev);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 
-void GetDevice9Methods()
-{	
+void GetDevice9Methods() {	
 	DWORD present9 = 0;
 	DWORD dip9 = 0;
 	DWORD endScene9 = 0;
@@ -65,8 +86,8 @@ void GetDevice9Methods()
 	IDirect3DDevice9* d3dDevice;
 	DWORD* vtablePtr;
 	D3DPRESENT_PARAMETERS d3dpp;
-	HWND hWnd = CreateWindowExA(0, "STATIC", "dummy", 0, 0, 0, 
-												0, 0, 0, 0, 0, 0);
+	HWND hWnd = 
+		CreateWindowExA(0, "STATIC", "dummy", 0, 0, 0, 0, 0, 0, 0, 0, 0);
 	HMODULE hD3D9 = GetModuleHandleA("d3d9.dll");
 	if (hD3D9 != 0) {
 		d3d9_ptr = Direct3DCreate9(D3D_SDK_VERSION);
@@ -117,11 +138,18 @@ void HookDevice9Methods() // DEPRECATED AND NOT USED BY NOW
 
 ///////////////////////////////////////////////////////////////////////////////
 
-void TF() {	
+// Основной поток хука
+void TF() {
+	// Перехватываем нужные нам D3D-функции
 	GetDevice9Methods();
-	while (1) {		
-		if (GetAsyncKeyState(VK_F1) & 1) 
+	// И уходим в бесконечный цикл
+	while (1) {
+		// Проверяем нажатые кнопки - совершаем действие.
+		if (GetAsyncKeyState(VK_F1)) 
 			wallHack = !wallHack;
+		if (GetAsyncKeyState(VK_F2))
+			crosshairToggle = !crosshairToggle;
+		// Ждём 100мсек, чтобы не нагружать процессор
 		Sleep(100);
 	}
 }
