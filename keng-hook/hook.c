@@ -31,9 +31,9 @@ HRESULT WINAPI hkDrawIndexedPrimitive( LPDIRECT3DDEVICE9 pDev,
 									   UINT NumVertices, 
 									   UINT startIndex, 
 									   UINT primCount) {
-	LPDIRECT3DVERTEXBUFFER9 Stream_Data;
-	UINT Offset = 0;
-	UINT Stride = 0;
+	//LPDIRECT3DVERTEXBUFFER9 Stream_Data;
+	//UINT Offset = 0;
+	//UINT Stride = 0;
 
 	//if (IDirect3DDevice9_GetStreamSource(pDev, 0, &Stream_Data, 
 	//									 &Offset, &Stride) == S_OK)
@@ -156,7 +156,7 @@ void TF() {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-int WINAPI DllMain(HINSTANCE hInst, DWORD ul_reason_for_call, void* lpReserved)
+int __stdcall DllMain(HINSTANCE hInst, DWORD ul_reason_for_call, void* lpReserved)
 {
 	if (ul_reason_for_call == DLL_PROCESS_ATTACH)
 		CreateThread(0, 0, (LPTHREAD_START_ROUTINE)TF, 0, 0, 0);

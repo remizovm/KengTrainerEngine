@@ -5,17 +5,17 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <Windows.h>
 #include <d3d9.h>
 #include <tlhelp32.h>
-#include <shlwapi.h>
+//#include <time.h>
+
 #pragma comment(lib, "d3d9.lib")
 //#pragma comment(lib, "Shlwapi.lib")
 
 ///////////////////////////////////////////////////////////////////////////////
 
-DWORD GetTargetThreadIDFromProcName(const char *);
-int Inject(const DWORD, const char *);
+unsigned long GetTargetThreadIDFromProcName(const char *);
+int Inject(const unsigned long, const char *);
 
 LPDIRECT3D9 d3d;
 LPDIRECT3DDEVICE9 d3ddev;
@@ -56,11 +56,11 @@ void InitD3D(const HWND hWnd)
 
 ///////////////////////////////////////////////////////////////////////////////
 
-LRESULT CALLBACK WindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) 
+LRESULT WindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) 
 {
 	//PAINTSTRUCT ps; 
     //HDC hdc;
-	DWORD pID;
+	unsigned long pID;
 	char buf[MAX_PATH] = {0};
 	//HPEN penWhite;
 	//HPEN penBlack;
@@ -95,7 +95,7 @@ LRESULT CALLBACK WindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
 ///////////////////////////////////////////////////////////////////////////////
 
-int WINAPI WinMain(HINSTANCE hInstance, 
+int __stdcall WinMain(HINSTANCE hInstance, 
 				   HINSTANCE hPrevInstance, 
 				   LPSTR	 lpCmdLine, 
 				   int		 nCmdShow) 
@@ -103,11 +103,14 @@ int WINAPI WinMain(HINSTANCE hInstance,
 	WNDCLASSEX wc;
 	HWND hWnd;
 	MSG msg;
+	long begin, end;
+	double time_spent;
 
+	begin = clock();
 	ZeroMemory(&wc, sizeof(WNDCLASSEX));
 	wc.cbSize = sizeof(WNDCLASSEX);
 	wc.style = CS_HREDRAW | CS_VREDRAW;
-	wc.lpfnWndProc = WindowProc;
+	wc.lpfnWndProc = (WNDPROC)WindowProc;
 	wc.hIcon = LoadIcon(0, IDI_APPLICATION);
 	wc.hInstance = hInstance;
 	wc.hCursor = LoadCursor(0, IDC_ARROW);
@@ -127,6 +130,11 @@ int WINAPI WinMain(HINSTANCE hInstance,
 		RenderFrame();
 	}
 	CleanD3D();
+	end = clock();
+	time_spent = (double)(end - begin) / 1000;
+	//char length_string[20];
+	//_snprintf(length_string, sizeof(length_string), "%f", time_spent);
+	//MessageBox(0, length_string, 0, 0);
 	return msg.wParam;
 }
 
@@ -153,8 +161,10 @@ char* Customstrstr(const char *in, const char *str)
 
 ///////////////////////////////////////////////////////////////////////////////
 
+//
 // Game process ID searching function
-DWORD GetTargetThreadIDFromProcName(const char *procName) 
+//
+unsigned long GetTargetThreadIDFromProcName(const char *procName) 
 {
 	PROCESSENTRY32 pe; // process snapshot
 	int retval;
@@ -175,10 +185,10 @@ DWORD GetTargetThreadIDFromProcName(const char *procName)
 
 ///////////////////////////////////////////////////////////////////////////////
 
-int Inject(const DWORD pID, const char* dllName) 
+int Inject(const unsigned long pID, const char* dllName) 
 { 
 	HANDLE pHandle;
-	DWORD loadLibAddr;
+	unsigned long loadLibAddr;
 	LPVOID rString;
 	HANDLE hThread;
 
@@ -187,7 +197,7 @@ int Inject(const DWORD pID, const char* dllName)
 	pHandle = OpenProcess(PROCESS_ALL_ACCESS, 0, pID);
 	// get the LoadLibraryA() address from kernel32.dll
 	loadLibAddr = 
-		(DWORD)GetProcAddress(GetModuleHandle("kernel32.dll"), "LoadLibraryA"); 
+		(unsigned long)GetProcAddress(GetModuleHandle("kernel32.dll"), "LoadLibraryA"); 
 	rString = (LPVOID)VirtualAllocEx(pHandle, 0, strlen(dllName), 
 									 MEM_RESERVE | MEM_COMMIT, 
 									 PAGE_READWRITE); 
