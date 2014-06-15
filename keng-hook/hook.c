@@ -9,18 +9,84 @@
 #include <d3dx9core.h>
 #include "detours.h"
 #pragma comment(lib, "d3d9")
+#pragma comment (lib, "d3dx9")
 
 ///////////////////////////////////////////////////////////////////////////////
 
-typedef HRESULT(WINAPI* pDrawIndexedPrimitive)(LPDIRECT3DDEVICE9, 
-				D3DPRIMITIVETYPE, int, UINT, UINT, UINT, UINT);
+#pragma region definitions
+
+typedef HRESULT(WINAPI* pDrawIndexedPrimitive)(LPDIRECT3DDEVICE9,
+	D3DPRIMITIVETYPE, int, UINT, UINT, UINT, UINT);
 typedef HRESULT(WINAPI* pEndScene)(LPDIRECT3DDEVICE9);
 typedef HRESULT(WINAPI* pReset)(LPDIRECT3DDEVICE9, D3DPRESENT_PARAMETERS*);
+
 pDrawIndexedPrimitive oDrawIndexedPrimitive;
 pEndScene oEndScene;
 pReset oReset;
-int wallHack;
+
+#pragma endregion
+
+#pragma region options
+
+int wallHack = 0;
 int crosshairToggle = 0;
+int indicator = 1;
+
+#pragma endregion
+
+#pragma region variables
+
+D3DRECT rec = { 10, 10, 120, 30 };
+ID3DXFont *m_font = 0;
+RECT fontRect = { 10, 15, 120, 120 };
+D3DCOLOR bkgColor = D3DCOLOR_XRGB(0, 0, 255);
+D3DCOLOR fontColor = D3DCOLOR_XRGB(0, 255, 255);
+
+#pragma endregion
+
+///////////////////////////////////////////////////////////////////////////////
+
+void SetModelColor(LPDIRECT3DDEVICE9 pDev, float r, float g, float b, 
+	float a, float glowr, float glowg, float glowb, float glowa)
+{
+	float lightValues[4] = { r, g, b, a };
+	float glowValues[4] = { glowr, glowg, glowb, glowa };
+	(pDev)->lpVtbl->SetPixelShaderConstantF(pDev, 1, lightValues, 1);
+	(pDev)->lpVtbl->SetPixelShaderConstantF(pDev, 3, glowValues, 1);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
+void DrawIndicator(void* self)
+{
+	IDirect3DDevice9* dev = (IDirect3DDevice9*)self;
+	
+	if (m_font == 0)
+		D3DXCreateFont(dev, 12, 0, 0, 0, 0, 1, 0, 0, 0, "Terminal", &m_font);	
+	IDirect3DDevice9_Clear(dev, 1, &rec, D3DCLEAR_TARGET, bkgColor, 1.0f, 0);	
+	(m_font)->lpVtbl->DrawText(m_font, 0, "menu", -1, &fontRect, 0, fontColor);
+}
+
+void DrawCrosshair(void* self)
+{
+	IDirect3DDevice9* dev = (IDirect3DDevice9*)self;
+	D3DVIEWPORT9 viewP;
+	// Через функцию GetViewport находим размер игрового экрана
+	IDirect3DDevice9_GetViewport(dev, &viewP);
+	// И его центр
+	DWORD scrCenterX = viewP.Width / 2;
+	DWORD scrCenterY = viewP.Height / 2;
+	// Задаём размер прицела
+	D3DRECT rect1 =
+	{ scrCenterX - 5, scrCenterY, scrCenterX + 5, scrCenterY + 1 };
+	D3DRECT rect2 =
+	{ scrCenterX, scrCenterY - 5, scrCenterX + 1, scrCenterY + 5 };
+	// Задаём цвет (RGB, Red Green Blue, Красный Зелёный Синий, 0-255)
+	D3DCOLOR color = D3DCOLOR_XRGB(255, 0, 0);
+	// Рисуем
+	IDirect3DDevice9_Clear(dev, 1, &rect1, D3DCLEAR_TARGET, color, 0, 0);
+	IDirect3DDevice9_Clear(dev, 1, &rect2, D3DCLEAR_TARGET, color, 0, 0);
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -31,16 +97,26 @@ HRESULT WINAPI hkDrawIndexedPrimitive( LPDIRECT3DDEVICE9 pDev,
 									   UINT NumVertices, 
 									   UINT startIndex, 
 									   UINT primCount) {
-	//LPDIRECT3DVERTEXBUFFER9 Stream_Data;
-	//UINT Offset = 0;
-	//UINT Stride = 0;
+	if (wallHack)
+	{
+		LPDIRECT3DVERTEXBUFFER9 Stream_Data;
+		UINT Offset = 0;
+		UINT Stride = 0;
 
-	//if (IDirect3DDevice9_GetStreamSource(pDev, 0, &Stream_Data, 
-	//									 &Offset, &Stride) == S_OK)
-	//	IDirect3DVertexBuffer9_Release(Stream_Data);
-	//if (Stride == 32 && BaseVertexIndex == 33) {
-	//	IDirect3DDevice9_SetRenderState(pDev, D3DRS_ZENABLE, D3DZB_FALSE);
-	//}
+		if (IDirect3DDevice9_GetStreamSource(pDev, 0, &Stream_Data, 
+											 &Offset, &Stride) == S_OK)
+			IDirect3DVertexBuffer9_Release(Stream_Data);
+		// 32 34
+		// 32 47
+		if (Stride == 32 && (BaseVertexIndex == 18 || BaseVertexIndex == 70 || 
+							 BaseVertexIndex == 34 || BaseVertexIndex == 47)) {
+			Beep(500, 300);
+			SetModelColor(pDev, 0.5f, 0.0f, 0.0f, 0.25f, 0.5f, 0.5f, 0.5f, 0.5f);
+			IDirect3DDevice9_SetRenderState(pDev, D3DRS_ZENABLE, 0);
+			oDrawIndexedPrimitive(pDev, PrimType, BaseVertexIndex, 
+				MinVertexIndex, NumVertices, startIndex, primCount);
+		}
+	}	
 	return oDrawIndexedPrimitive(pDev, PrimType, BaseVertexIndex, 
 								 MinVertexIndex, NumVertices, startIndex, 
 								 primCount);
@@ -53,36 +129,36 @@ HRESULT WINAPI hkDrawIndexedPrimitive( LPDIRECT3DDEVICE9 pDev,
 // В ней происходит всё рисование и выводится всё уже поверх игры.
 //
 HRESULT WINAPI hkEndScene(LPDIRECT3DDEVICE9 pDev) {	
+	if (indicator)
+		DrawIndicator(pDev);
 	// Проверяем, что нам нужно нарисовать прицел
 	if (crosshairToggle) {
-		D3DVIEWPORT9 viewP;
-		// Через функцию GetViewport находим размер игрового экрана
-		IDirect3DDevice9_GetViewport(pDev, &viewP);
-		// И его центр
-		DWORD scrCenterX = viewP.Width / 2;
-		DWORD scrCenterY = viewP.Height / 2;
-		// Задаём размер прицела
-		D3DRECT rect1 = 
-		{ scrCenterX - 5, scrCenterY, scrCenterX + 5, scrCenterY + 1 };
-		D3DRECT rect2 = 
-		{ scrCenterX, scrCenterY - 5, scrCenterX + 1, scrCenterY + 5 };
-		// Задаём цвет (RGB, Red Green Blue, Красный Зелёный Синий, 0-255)
-		D3DCOLOR color = D3DCOLOR_XRGB(255, 0, 0);
-		// Рисуем
-		IDirect3DDevice9_Clear(pDev, 1, &rect1, D3DCLEAR_TARGET, color, 0, 0);
-		IDirect3DDevice9_Clear(pDev, 1, &rect2, D3DCLEAR_TARGET, color, 0, 0);
+		DrawCrosshair(pDev);
 	}
 	return oEndScene(pDev);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 
-void GetDevice9Methods() {	
-	DWORD present9 = 0;
+void *DetourFunc(BYTE *src, const BYTE *dst, const int len)
+{
+	BYTE *jmp = (BYTE*)malloc(len + 5);
+	DWORD dwback;
+	VirtualProtect(src, len, PAGE_READWRITE, &dwback);
+	memcpy(jmp, src, len);	jmp += len;
+	jmp[0] = 0xE9;
+	*(DWORD*)(jmp + 1) = (DWORD)(src + len - jmp) - 5;
+	src[0] = 0xE9;
+	*(DWORD*)(src + 1) = (DWORD)(dst - src) - 5;
+	VirtualProtect(src, len, dwback, &dwback);
+	return (jmp - len);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
+int GetDevice9Methods() {
 	DWORD dip9 = 0;
 	DWORD endScene9 = 0;
-	DWORD reset9 = 0;
-	IDirect3D9 *d3d9_ptr;
 	IDirect3DDevice9* d3dDevice;
 	DWORD* vtablePtr;
 	D3DPRESENT_PARAMETERS d3dpp;
@@ -90,27 +166,32 @@ void GetDevice9Methods() {
 		CreateWindowExA(0, "STATIC", "dummy", 0, 0, 0, 0, 0, 0, 0, 0, 0);
 	HMODULE hD3D9 = GetModuleHandleA("d3d9.dll");
 	if (hD3D9 != 0) {
-		d3d9_ptr = Direct3DCreate9(D3D_SDK_VERSION);
+		IDirect3D9* d3d9_ptr = Direct3DCreate9(D3D_SDK_VERSION);
 		ZeroMemory(&d3dpp, sizeof(d3dpp));
 		d3dpp.Windowed = 1;
 		d3dpp.SwapEffect = D3DSWAPEFFECT_DISCARD;
 		IDirect3D9_CreateDevice(d3d9_ptr, 0, D3DDEVTYPE_HAL, hWnd, 
 					D3DCREATE_SOFTWARE_VERTEXPROCESSING, &d3dpp, &d3dDevice);
 		vtablePtr = (PDWORD)(*((PDWORD)d3dDevice));
-		present9 = vtablePtr[17] - (DWORD)hD3D9;
+		//DWORD present9 = vtablePtr[17] - (DWORD)hD3D9;
 		dip9 = vtablePtr[82] - (DWORD)hD3D9;
 		endScene9 = vtablePtr[42] - (DWORD)hD3D9;
-		reset9 = vtablePtr[16] - (DWORD)hD3D9;
+		//DWORD reset9 = vtablePtr[16] - (DWORD)hD3D9;
 		IDirect3DDevice9_Release(d3dDevice);
 		IDirect3D9_Release(d3d9_ptr);
 	}
 	CloseHandle(hWnd);		
 	oDrawIndexedPrimitive = 
-		(pDrawIndexedPrimitive)DetourFunction((PBYTE)((DWORD)hD3D9 + dip9), 
+		(pDrawIndexedPrimitive)DetourFunction((PBYTE)((DWORD)hD3D9 + dip9),
 		(PBYTE)hkDrawIndexedPrimitive);
 	oEndScene = 
-		(pEndScene)DetourFunction((PBYTE)((DWORD)hD3D9 + endScene9), 
+		(pEndScene)DetourFunction((PBYTE)((DWORD)hD3D9 + endScene9),
 		(PBYTE)hkEndScene);
+	// Проверка, поставились ли хуки
+	if (oDrawIndexedPrimitive != 0 && oEndScene != 0)
+		return 0;
+	else
+		return 1;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -141,14 +222,23 @@ void HookDevice9Methods() // DEPRECATED AND NOT USED BY NOW
 // Основной поток хука
 void TF() {
 	// Перехватываем нужные нам D3D-функции
-	GetDevice9Methods();
+	if (!GetDevice9Methods())
+		Beep(500, 300);
 	// И уходим в бесконечный цикл
 	while (1) {
 		// Проверяем нажатые кнопки - совершаем действие.
-		if (GetAsyncKeyState(VK_F1)) 
-			wallHack = !wallHack;
-		if (GetAsyncKeyState(VK_F2))
+		if (GetAsyncKeyState(VK_F1)) {
+			Beep(500, 500);
+			indicator = !indicator;
+		}
+		if (GetAsyncKeyState(VK_F2)) {
+			Beep(500, 500);
 			crosshairToggle = !crosshairToggle;
+		}
+		if (GetAsyncKeyState(VK_F3)) {
+			Beep(500, 500);
+			wallHack = !wallHack;
+		}
 		// Ждём 100мсек, чтобы не нагружать процессор
 		Sleep(100);
 	}

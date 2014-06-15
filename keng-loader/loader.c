@@ -7,10 +7,9 @@
 
 #include <d3d9.h>
 #include <tlhelp32.h>
-//#include <time.h>
+#include "resource.h"
 
 #pragma comment(lib, "d3d9.lib")
-//#pragma comment(lib, "Shlwapi.lib")
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -61,7 +60,7 @@ LRESULT WindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	//PAINTSTRUCT ps; 
     //HDC hdc;
 	unsigned long pID;
-	char buf[MAX_PATH] = {0};
+	
 	//HPEN penWhite;
 	//HPEN penBlack;
 
@@ -80,6 +79,7 @@ LRESULT WindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			}
 			else
 			{
+				char buf[MAX_PATH] = { 0 };
 				Beep(1000, 100);
 				GetFullPathName("keng-hook.dll", MAX_PATH, buf, 0);
 				Inject(pID, buf);
@@ -100,13 +100,23 @@ int __stdcall WinMain(HINSTANCE hInstance,
 				   LPSTR	 lpCmdLine, 
 				   int		 nCmdShow) 
 {
+	
+	HRSRC hRes = FindResource(0, MAKEINTRESOURCE(IDR_DLL2), "DLL");
+	if (hRes == NULL)
+	{
+		Beep(500, 1000);
+	}
+	HGLOBAL hMem = LoadResource(0, hRes);
+	void* pMem = LockResource(hMem);
+	DWORD size = SizeofResource(0, hRes);
+	
 	WNDCLASSEX wc;
 	HWND hWnd;
 	MSG msg;
-	long begin, end;
-	double time_spent;
+	//long begin, end;
+	//double time_spent;
 
-	begin = clock();
+	//begin = clock();
 	ZeroMemory(&wc, sizeof(WNDCLASSEX));
 	wc.cbSize = sizeof(WNDCLASSEX);
 	wc.style = CS_HREDRAW | CS_VREDRAW;
@@ -130,8 +140,8 @@ int __stdcall WinMain(HINSTANCE hInstance,
 		RenderFrame();
 	}
 	CleanD3D();
-	end = clock();
-	time_spent = (double)(end - begin) / 1000;
+	//end = clock();
+	//time_spent = (double)(end - begin) / 1000;
 	//char length_string[20];
 	//_snprintf(length_string, sizeof(length_string), "%f", time_spent);
 	//MessageBox(0, length_string, 0, 0);
@@ -190,7 +200,7 @@ int Inject(const unsigned long pID, const char* dllName)
 	HANDLE pHandle;
 	unsigned long loadLibAddr;
 	LPVOID rString;
-	HANDLE hThread;
+	//HANDLE hThread;
 
 	if(!pID) 
 		return 1;
@@ -202,7 +212,7 @@ int Inject(const unsigned long pID, const char* dllName)
 									 MEM_RESERVE | MEM_COMMIT, 
 									 PAGE_READWRITE); 
 	WriteProcessMemory(pHandle, (LPVOID)rString, dllName, strlen(dllName), 0);
-	hThread = CreateRemoteThread(pHandle, 0, 0, 
+	CreateRemoteThread(pHandle, 0, 0, 
 								(LPTHREAD_START_ROUTINE)loadLibAddr, 
 								(LPVOID)rString, 0, 0);
 	CloseHandle(pHandle); // close the opened handle 
